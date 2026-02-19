@@ -1,0 +1,14 @@
+# 중개사 프로필 설정
+# 최초 1회 설정 후 매 브리핑마다 재사용
+
+name: "홍길동"
+company: "부동산중개법인"
+qualifications:
+  - "공인중개사"
+phone: "010-0000-0000"
+email: "agent@example.com"
+slogan: "전문가로서 분석하고, 고객의 편에서 중개하겠습니다"
+
+# 이미지 경로 (assets/ 폴더 내)
+photo_path: "assets/agent_photo.png"
+logo_path: "assets/logo.png"

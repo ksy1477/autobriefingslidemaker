@@ -1,0 +1,37 @@
+# 부동산 브리핑자료 자동생성기 설정
+
+# 공공데이터포털 API 키 (실거래가 조회용)
+# https://data.go.kr 에서 발급
+public_data_api_key: ""
+
+# 네이버 클라우드 Maps API (선택사항)
+naver_maps_client_id: ""
+naver_maps_client_secret: ""
+
+# 크롤링 설정
+crawling:
+  request_delay_min: 1.0  # 초
+  request_delay_max: 3.0  # 초
+  max_retries: 3
+  timeout: 30  # 초
+
+# 강남역 좌표 (고정)
+gangnam_station:
+  lat: 37.497942
+  lng: 127.027621
+
+# PPT 출력 설정
+output:
+  directory: "output"
+  filename_format: "{customer_name}_브리핑자료_{date}.pptx"
+
+# 디자인 설정
+design:
+  primary_color: "#C8102E"
+  secondary_color: "#333333"
+  light_gray: "#F5F5F5"
+  background_color: "#FFFFFF"
+  font_family: "맑은 고딕"
+  title_font_size: 28
+  body_font_size: 14
+  caption_font_size: 9
