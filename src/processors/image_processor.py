@@ -119,3 +119,103 @@ def create_placeholder_image(
 
     img.save(output_path)
     return output_path
+
+
+def mark_location_on_map(
+    map_image_path: str,
+    output_path: str,
+    center_x: int,
+    center_y: int,
+    marker_color: str = "#C8102E",
+    marker_size: int = 20,
+    label: str = "",
+) -> Optional[str]:
+    """
+    지도 이미지에 위치 마커 표시 (동 위치 표시용)
+
+    Args:
+        map_image_path: 원본 지도 이미지 경로
+        output_path: 저장 경로
+        center_x: 마커 중심 x 좌표
+        center_y: 마커 중심 y 좌표
+        marker_color: 마커 색상
+        marker_size: 마커 크기 (반지름)
+        label: 마커 위 라벨 텍스트
+
+    Returns:
+        저장 경로 또는 None
+    """
+    try:
+        from PIL import ImageDraw, ImageFont
+
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        img = Image.open(map_image_path).copy()
+        draw = ImageDraw.Draw(img)
+
+        # 원형 마커
+        bbox = [
+            center_x - marker_size, center_y - marker_size,
+            center_x + marker_size, center_y + marker_size,
+        ]
+        draw.ellipse(bbox, fill=marker_color, outline="#FFFFFF", width=3)
+
+        # 라벨 텍스트
+        if label:
+            try:
+                import platform
+                system = platform.system()
+                if system == 'Windows':
+                    font_path = "C:/Windows/Fonts/malgun.ttf"
+                elif system == 'Darwin':
+                    font_path = "/System/Library/Fonts/AppleSDGothicNeo.ttc"
+                else:
+                    font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
+                font = ImageFont.truetype(font_path, 14)
+            except Exception:
+                font = ImageFont.load_default()
+
+            text_bbox = draw.textbbox((0, 0), label, font=font)
+            text_w = text_bbox[2] - text_bbox[0]
+            text_x = center_x - text_w // 2
+            text_y = center_y - marker_size - 20
+            draw.text((text_x, text_y), label, fill=marker_color, font=font)
+
+        img.save(output_path)
+        return output_path
+    except Exception as e:
+        print(f"[ERROR] 지도 마킹 실패: {e}")
+        return None
+
+
+def mark_dong_on_siteplan(
+    siteplan_path: str,
+    dong_coordinates: Tuple[int, int, int, int],
+    output_path: str,
+    border_color: str = "#C8102E",
+    border_width: int = 3,
+) -> Optional[str]:
+    """
+    배치도 이미지에서 특정 동 위치에 빨간 박스 마킹
+
+    Args:
+        siteplan_path: 배치도 이미지 경로
+        dong_coordinates: (x1, y1, x2, y2) 동 위치 좌표
+        output_path: 저장 경로
+        border_color: 박스 색상
+        border_width: 박스 선 두께
+
+    Returns:
+        저장 경로 또는 None
+    """
+    try:
+        from PIL import ImageDraw
+
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        img = Image.open(siteplan_path).copy()
+        draw = ImageDraw.Draw(img)
+        draw.rectangle(dong_coordinates, outline=border_color, width=border_width)
+        img.save(output_path)
+        return output_path
+    except Exception as e:
+        print(f"[ERROR] 배치도 마킹 실패: {e}")
+        return None

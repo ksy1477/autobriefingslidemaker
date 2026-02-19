@@ -1,0 +1,329 @@
+{
+  "complex_detail": {
+    "name": "한신",
+    "type": "A01",
+    "address": {
+      "legalDivisionNumber": "1126010300",
+      "legalDivisionLevel": "EUP",
+      "city": "서울시",
+      "division": "중랑구",
+      "sector": "중화동",
+      "jibun": "450",
+      "roadName": "동일로 752",
+      "zipCode": "02095"
+    },
+    "coordinates": {
+      "xCoordinate": 127.082394,
+      "yCoordinate": 37.59726
+    },
+    "totalHouseholdNumber": 1544,
+    "leaseHouseholdNumber": 0,
+    "dongCount": 9,
+    "hasBuildingHoInfo": true,
+    "constructionCompany": "한신공영",
+    "isServicedResidence": false,
+    "buildingRatioInfo": {
+      "floorAreaRatio": 376,
+      "buildingCoverageRatio": 20
+    },
+    "useApprovalDate": "19971011",
+    "approvalElapsedYear": 29,
+    "parkingInfo": {
+      "totalParkingCount": 1563,
+      "parkingCountPerHousehold": 1.01
+    },
+    "heatingAndCoolingInfo": {
+      "heatingAndCoolingSystemType": "HT001",
+      "heatingEnergyType": "HF001"
+    },
+    "managementOfficeContact": "02-2207-0365",
+    "monopolyRestrictionType": "N",
+    "isRestrictedTransferOfReconstructionAssociationMembership": false,
+    "isComplexTourExist": false
+  },
+  "photos": [
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_271/apt_realimage_1483937767707CCgA3_JPEG/e9fb1c1a1821c05a6b01d2dbe04bac96.JPG",
+      "majorCategory": "CPXFV",
+      "subCategory": "CPX01",
+      "category": "전경",
+      "comment": "아파트 단지 전경 모습입니다. 단지가 상당히 커서 웅장한 느낌을 줍니다. 단지 주변으로 막힌곳이 없어 확트인 시야를 확보할 수 있으며, 햇볕이 잘들고 조망권이 매우 훌륭합니다. ",
+      "coordinates": {
+        "xCoordinate": 127.080762,
+        "yCoordinate": 37.597318
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_58/apt_realimage_1483937768698BNaQv_JPEG/11088a0ea7101e9095c251b13b23a997.JPG",
+      "majorCategory": "CDOOR",
+      "subCategory": "CDO01",
+      "category": "정문",
+      "comment": "정문 사진입니다. 차단기가 설치되어 있으며 출입구 중앙에 경비실이 위치하고 있어 외부차량의 통제와 주민들의 출입이 편리해 보입니다.",
+      "coordinates": {
+        "xCoordinate": 127.080982,
+        "yCoordinate": 37.597566
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_133/apt_realimage_14839377682187EuyD_JPEG/b632dcaca555449f0a4e851636eb31b4.JPG",
+      "majorCategory": "CDOOR",
+      "subCategory": "CDO02",
+      "category": "후문",
+      "comment": "후문 사진입니다 차단기가 설치되어 있으며, 바로 옆쪽으로 경비실이 위치하고 있어 외부차량과 외부인의 통제가 용이하여 주민들이 좀더 안전할 수 있어 보입니다.",
+      "coordinates": {
+        "xCoordinate": 127.08306,
+        "yCoordinate": 37.596665
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_240/apt_realimage_1483937767205CIR0u_JPEG/a143b72049bd49aeb63745fee215d8e0.JPG",
+      "majorCategory": "CPXFV",
+      "subCategory": "CPX02",
+      "category": "건물 외관",
+      "comment": "건물외관 사진입니다. 외관이 양호한 상태이고, 동간 시야를 가리지 않게 배치되어 있으며 한강 등 조망권이 매우 좋습니다.",
+      "coordinates": {
+        "xCoordinate": 127.081971,
+        "yCoordinate": 37.596885
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_196/apt_realimage_14839377666906P4F2_JPEG/c1377e185ad2de1780b4cbbc8bb864dd.JPG",
+      "majorCategory": "CPXFV",
+      "subCategory": "CPX03",
+      "category": "1층 공용현관",
+      "comment": "1층 공용현관 사진입니다. 계단이 없어 주민들의 이동이 매우 편리합니다. 보안장치가 설치되어있어 외부인들의 입출입을 더욱 효과적으로 관리합니다",
+      "coordinates": {
+        "xCoordinate": 127.081032,
+        "yCoordinate": 37.596643
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_271/apt_realimage_1483937766157UCIXd_JPEG/680ceb9f00cafa9b546ef36ab0a2af73.JPG",
+      "majorCategory": "PKLOT",
+      "subCategory": "PKL01",
+      "category": "지상주차장",
+      "comment": "지상주차장 사진입니다. 단지내 곳곳에 지상주차장이 배치되어 있으며 주차공간이 넓어 주민들이 좀 더 편안하게 주차할 수 있어 보입니다.",
+      "coordinates": {
+        "xCoordinate": 127.082356,
+        "yCoordinate": 37.59694
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_283/apt_realimage_1483937765615xiGO7_JPEG/68f2db900eee8301f2b0bf3effd721ce.JPG",
+      "majorCategory": "PKLOT",
+      "subCategory": "PKL02",
+      "category": "지하 주차장 입구",
+      "comment": "지하주차장 입구 사진입니다. 출구, 입구가 따로 있어 차량의 이동이 편리하고 출차경보기가 달려있어, 입출 차량 미연의 사고를 방지합니다.",
+      "coordinates": {
+        "xCoordinate": 127.082156,
+        "yCoordinate": 37.596804
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_62/apt_realimage_1483937765167fLLtD_JPEG/c0cea8b4f928a839336d46e5f2b514f5.JPG",
+      "majorCategory": "PKLOT",
+      "subCategory": "PKL03",
+      "category": "지하 주차장",
+      "comment": "지하 주차장 사진입니다. 주차장 상태가 비교적 깨끗하게 관리되어져 있고 주차장이 밝고 주차공간이 넓어 주민들이 편리하게 주차 할 수 있어 보입니다.",
+      "coordinates": {
+        "xCoordinate": 127.082067,
+        "yCoordinate": 37.597038
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_39/apt_realimage_1483937764653PfbO4_JPEG/73119b94a633c70b5b7daf46f1ce1362.JPG",
+      "majorCategory": "INCNV",
+      "subCategory": "INC01",
+      "category": "놀이터",
+      "comment": "단지내 곳곳에 위치한 놀이터 사진입니다. 놀이기구가 매우 깨끗한 상태이며 바닥은 고무재질로 되어있어 아이들이 안전하고 즐겁게 뛰어놀수 있는 공간입니다.",
+      "coordinates": {
+        "xCoordinate": 127.08214,
+        "yCoordinate": 37.59707
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_1/apt_realimage_1483937764115IsDyQ_JPEG/e51edd65a2c0c765919dbe5a69ae8240.JPG",
+      "majorCategory": "INCNV",
+      "subCategory": "INC01",
+      "category": "놀이터",
+      "comment": "단지내 곳곳에 위치한 놀이터 사진입니다. 놀이기구가 매우 깨끗한 상태이며 바닥은 고무재질로 되어있어 아이들이 안전하고 즐겁게 뛰어놀수 있는 공간입니다.",
+      "coordinates": {
+        "xCoordinate": 127.083108,
+        "yCoordinate": 37.597164
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_286/apt_realimage_14839377634715N1ck_JPEG/b939f1cfe5376806f12231e7241f833b.JPG",
+      "majorCategory": "INCNV",
+      "subCategory": "INC01",
+      "category": "놀이터",
+      "comment": "단지내 곳곳에 위치한 놀이터 사진입니다. 놀이기구가 매우 깨끗한 상태이며 바닥은 고무재질로 되어있어 아이들이 안전하고 즐겁게 뛰어놀수 있는 공간입니다.",
+      "coordinates": {
+        "xCoordinate": 127.081213,
+        "yCoordinate": 37.596751
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_159/apt_realimage_1483937762980okwHW_JPEG/1c12f6b3d5547af5abb7f265216c3d3f.JPG",
+      "majorCategory": "INCNV",
+      "subCategory": "INC02",
+      "category": "운동시설",
+      "comment": "단지내 운동시설 사진입니다. 배드민턴장과 조깅과 롤러스케이트를 탈 수 있는 운동장이 있습니다. 주민들이 멀리가지 않고도 편리하게 이용가능합니다.",
+      "coordinates": {
+        "xCoordinate": 127.082408,
+        "yCoordinate": 37.597887
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_254/apt_realimage_148393776234486JyW_JPEG/a7e2714258768bac304fdfd3c20672b2.JPG",
+      "majorCategory": "INCNV",
+      "subCategory": "INC02",
+      "category": "운동시설",
+      "comment": "단지내 운동시설 사진입니다. 배드민턴장과 조깅과 롤러스케이트를 탈 수 있는 운동장이 있습니다. 주민들이 멀리가지 않고도 편리하게 이용가능합니다.",
+      "coordinates": {
+        "xCoordinate": 127.082244,
+        "yCoordinate": 37.597832
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_105/apt_realimage_1483937761684Tm6qz_JPEG/601800e0a36a21171da084b9dcc376b0.JPG",
+      "majorCategory": "INCNV",
+      "subCategory": "INC03",
+      "category": "산책로, 보행로",
+      "comment": "단지 전체를 감싸는 보행로가 있습니다.나무들이 곳곳에 심어져있어 좀더 친환경적인 느낌을 주며 여름에도 시원한그늘 아래에서 보행로를 이용하여 산책을 즐길수있습니다.",
+      "coordinates": {
+        "xCoordinate": 127.081537,
+        "yCoordinate": 37.596599
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_189/apt_realimage_1483937760998iNrss_JPEG/ef11593a81408fa7fb8497f69834f06e.JPG",
+      "majorCategory": "INCNV",
+      "subCategory": "INC03",
+      "category": "산책로, 보행로",
+      "comment": "단지 전체를 감싸는 보행로가 있습니다.나무들이 곳곳에 심어져있어 좀더 친환경적인 느낌을 주며 여름에도 시원한그늘 아래에서 보행로를 이용하여 산책을 즐길수있습니다.",
+      "coordinates": {
+        "xCoordinate": 127.082816,
+        "yCoordinate": 37.596838
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_198/apt_realimage_1483937760439SCfQm_JPEG/08fdb76328616bda804fa41d980f457c.JPG",
+      "majorCategory": "INCNV",
+      "subCategory": "INC04",
+      "category": "휴식시설",
+      "comment": "단지내에 있는 휴식공간 사진입니다. 나무가 우거져 있어 더운 여름에 시원하게 쉴수 있으며, 지붕이 있어 눈과 비가 와도 불편함없이 휴식할수 있습니다.",
+      "coordinates": {
+        "xCoordinate": 127.083132,
+        "yCoordinate": 37.597006
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_113/apt_realimage_14839377599172Vqzl_JPEG/4527e512f726d53c9631de60be1f9f82.JPG",
+      "majorCategory": "INCNV",
+      "subCategory": "INC07",
+      "category": "편의점/마트",
+      "comment": "단지내에 위치한 마트사진입니다. 마트뿐만 아니라 부동산, 정육점, 인테리어 등이 입점하고 있어 주민들이 멀리가지 않고도 편리하게 이용 가능합니다.",
+      "coordinates": {
+        "xCoordinate": 127.081181,
+        "yCoordinate": 37.597427
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_138/apt_realimage_14839377594593bLff_JPEG/b3cde031f872a418f321c2a6bef520cd.JPG",
+      "majorCategory": "INCNV",
+      "subCategory": "INC09",
+      "category": "관리사무소",
+      "comment": "관리사무소가 있는 건물 사진입니다. 관리사무소뿐만 아니라 노인정, 부녀회 등이 위치하고 있어 주민들이 편리하게 이용하실 수 있습니다.",
+      "coordinates": {
+        "xCoordinate": 127.081614,
+        "yCoordinate": 37.597014
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_94/apt_realimage_14839377589258eGV8_JPEG/c2d370143a5d8385f279ffcdf16ef039.JPG",
+      "majorCategory": "EDUFA",
+      "subCategory": "EDU02",
+      "category": "유치원",
+      "comment": "단지내에 위치한 유치원 사진입니다. 단지내에 위치하고 있어 부모님들이 아이들을 좀더 안심하고 위탁할수 있습니다. 외관이 굉장이 웅장하고 깨끗해 보입니다.",
+      "coordinates": {
+        "xCoordinate": 127.08274,
+        "yCoordinate": 37.59814
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_240/apt_realimage_1483937758434lXo8b_JPEG/0f44fc757e4ac83724cd8cbffb4519f7.JPG",
+      "majorCategory": "LIFFA",
+      "subCategory": "LIF01",
+      "category": "쓰레기장",
+      "comment": "단지내 쓰레기 및 분리수거 장소입니다. 수납할수 있는 수납함을 많이 배치해두고 있어 외관상 매우 깔끔한 느낌을 줍니다. 또한 주기적으로 관리하고 있어 매우 깨끗합니다.",
+      "coordinates": {
+        "xCoordinate": 127.082394,
+        "yCoordinate": 37.59726
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20170109_247/apt_realimage_1483937757880HoRQq_JPEG/48b3d8f3a7bc1191957ff029efb2d5d3.JPG",
+      "majorCategory": "LIFFA",
+      "subCategory": "LIF03",
+      "category": "경비실",
+      "comment": "단지내에 있는 경비실 사진입니다. 경비실이 단지내 곳곳에 위치하고 있어 주민들이 문의하기 편리하고 주민들에게 안전감을 제공합니다.",
+      "coordinates": {
+        "xCoordinate": 127.081053,
+        "yCoordinate": 37.596967
+      }
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20110422_5/land_system_1303438899127dhBGT_JPEG/1119538904034_4.jpg"
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20110421_279/land_system_13033749044109YMsJ_JPEG/jw_20060627111015_dan1.jpg"
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20110422_44/land_system_1303438898435nbvpl_JPEG/1119538904034_1.jpg"
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20110422_211/land_system_1303438899527w4mUU_JPEG/1119538904034_6.jpg"
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20110422_70/land_system_1303438898632p2YVp_JPEG/1119538904034_2.jpg"
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20110421_230/land_system_13033749046062QOVT_JPEG/jw_20060627111015_dan2.jpg"
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20110421_20/land_system_13033749049094pgqF_JPEG/jw_20060627111015_dan3.jpg"
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20110422_164/land_system_13034388988938fqbF_JPEG/1119538904034_3.jpg"
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20110422_26/land_system_1303438899326QPM1N_JPEG/1119538904034_5.jpg"
+    },
+    {
+      "url": "https://landthumb-phinf.pstatic.net/20110421_147/land_system_1303374905121xBr0P_JPEG/jw_20060627111015_dan4.jpg"
+    }
+  ],
+  "price_range": {
+    "dealMinPrice": 640000000,
+    "dealMaxPrice": 980000000,
+    "rentMinPrice": 400000000,
+    "rentMaxPrice": 470000000
+  },
+  "schools": [
+    {
+      "code": "B100001411",
+      "name": "서울상봉초등학교",
+      "operationType": "공립",
+      "allocationType": "01",
+      "studentsPerClassroom": 18.7,
+      "studentsPerTeacher": 11.5,
+      "distance": 106,
+      "walkingMinute": 2,
+      "coordinates": {
+        "xCoordinate": 127.0837598,
+        "yCoordinate": 37.5980771
+      }
+    }
+  ]
+}

@@ -49,6 +49,8 @@ class ComplexInfo(BaseModel):
     parking_per_unit: float            # 0.37
     built_year: int                    # 1990
     hashtags: List[str]                # ["역세권", "대단지"]
+    latitude: Optional[float] = None           # 위도
+    longitude: Optional[float] = None          # 경도
     aerial_photo_path: Optional[str] = None   # 다운로드된 전경사진 경로
     site_plan_path: Optional[str] = None      # 배치도 이미지 경로
     satellite_map_path: Optional[str] = None  # 위성지도 캡처 경로

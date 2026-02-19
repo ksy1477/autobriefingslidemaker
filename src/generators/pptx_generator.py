@@ -14,6 +14,8 @@ from src.generators.slide_cover import add_cover_slide
 from src.generators.slide_agent import add_agent_slide
 from src.generators.slide_list import add_list_slide
 from src.generators.slide_overview import add_overview_slide
+from src.generators.slide_location import add_location_slide
+from src.generators.slide_school import add_elementary_school_slide, add_middle_high_school_slide
 from src.generators.slide_price import add_price_slide
 from src.generators.slide_property import add_property_slide
 from src.processors.data_aggregator import (
@@ -36,7 +38,7 @@ def generate_briefing_pptx(
     1. 표지
     2. 중개사 소개
     3. 물건 리스트
-    4~N. 단지별 반복 (개요 → 실거래가 → 매물정보)
+    4~N. 단지별 반복 (개요 → 입지정보 → 학군초등 → 학군중고등 → 실거래가 → 매물정보)
 
     Args:
         customer_name: 고객명
@@ -80,11 +82,26 @@ def generate_briefing_pptx(
         ci = cd.complex_info
         print(f"  → [{ci.name}] 단지 개요 슬라이드 생성")
 
-        # 단지 개요
+        # A. 단지 개요
         overview_text = generate_complex_overview_text(ci)
         add_overview_slide(prs, ci, overview_text, logo_path=logo_path)
 
-        # 실거래가 (Phase 1에서 제공)
+        # B. 입지정보 (Phase 2)
+        if cd.location_info:
+            print(f"  → [{ci.name}] 입지정보 슬라이드 생성")
+            add_location_slide(prs, ci.name, cd.location_info, logo_path=logo_path)
+
+        # C. 학군지도 - 초등학교 (Phase 2)
+        if cd.school_info:
+            print(f"  → [{ci.name}] 학군지도(초등) 슬라이드 생성")
+            add_elementary_school_slide(prs, ci.name, cd.school_info, logo_path=logo_path)
+
+        # D. 학군지도 - 중·고등학교 (Phase 2)
+        if cd.school_info:
+            print(f"  → [{ci.name}] 학군지도(중·고등) 슬라이드 생성")
+            add_middle_high_school_slide(prs, ci.name, cd.school_info, logo_path=logo_path)
+
+        # E. 실거래가
         if cd.price_info:
             print(f"  → [{ci.name}] 실거래가 슬라이드 생성")
             price_summary = generate_price_summary(ci.name, cd.price_info)

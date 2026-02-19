@@ -21,6 +21,8 @@ from src.models import (
 from src.utils.url_parser import parse_naver_land_url
 from src.crawlers.naver_land import fetch_complex_info, fetch_property_detail
 from src.crawlers.asil import fetch_price_info, fetch_price_info_mock
+from src.crawlers.naver_map import fetch_location_info
+from src.crawlers.school_zone import fetch_school_info
 from src.processors.data_aggregator import (
     group_properties_by_complex,
     generate_hashtags,
@@ -143,6 +145,34 @@ def run_pipeline(
             price_info.price_graph_image_path = chart_path
             print(f"  실거래가 그래프 생성 완료")
 
+        # 입지정보 (Phase 2)
+        print(f"  입지정보 수집...")
+        location_info = fetch_location_info(
+            complex_id=complex_id,
+            complex_name=complex_info.name,
+            complex_lat=complex_info.latitude or 0.0,
+            complex_lng=complex_info.longitude or 0.0,
+            temp_dir=temp_dir,
+            config=config,
+            use_mock=use_mock,
+        )
+        if location_info:
+            print(f"  입지정보: {location_info.nearest_station}({location_info.station_line}) 도보 {location_info.walk_minutes}분")
+            # 역세권 등 해시태그 업데이트 (walk_minutes 반영)
+            complex_info.hashtags = generate_hashtags(complex_info, location_info.walk_minutes)
+
+        # 학군정보 (Phase 2)
+        print(f"  학군정보 수집...")
+        school_info = fetch_school_info(
+            complex_id=complex_id,
+            complex_name=complex_info.name,
+            address=complex_info.address,
+            temp_dir=temp_dir,
+            use_mock=use_mock,
+        )
+        if school_info:
+            print(f"  학군정보: {school_info.elementary_name}")
+
         # 매물 상세
         properties = []
         for prop_input in prop_inputs:
@@ -168,6 +198,8 @@ def run_pipeline(
 
         complex_data = ComplexData(
             complex_info=complex_info,
+            location_info=location_info,
+            school_info=school_info,
             price_info=price_info,
             properties=properties,
         )
