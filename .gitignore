@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Project specific
+temp/
+output/
+real_input.json
+config/config.yaml
+config/agent_profile.yaml
+
+# OS
+.DS_Store
+Thumbs.db
