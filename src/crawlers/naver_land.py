@@ -268,6 +268,25 @@ def _download_image(url: str, save_path: str) -> bool:
         return False
 
 
+# ─── 학교 SSR 데이터 추출 ───
+
+def fetch_school_basic_from_ssr(complex_id: str) -> List[Dict]:
+    """
+    fin.land.naver.com SSR에서 배정 학교 기본정보 추출.
+
+    Returns:
+        [{"code": "B100001411", "name": "서울상봉초등학교", "operationType": "공립",
+          "distance": 106, "walkingMinute": 2, "coordinates": {...}, ...}, ...]
+    """
+    html = _fetch_ssr_html(complex_id)
+    if not html:
+        return []
+
+    rsc_data = _parse_rsc_data(html)
+    schools = rsc_data.get("schools")
+    return schools if schools else []
+
+
 # ─── 공개 API ───
 
 def fetch_complex_info(complex_id: str, temp_dir: str = "temp") -> Optional[ComplexInfo]:

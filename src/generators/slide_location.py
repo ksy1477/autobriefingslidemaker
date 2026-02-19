@@ -1,6 +1,5 @@
 """
-입지정보 슬라이드 생성 (Slide B)
-최근접 지하철역 도보 경로 + 강남역 대중교통 경로
+입지정보 슬라이드 생성 — 레퍼런스 PPT 양식
 """
 import os
 from typing import Optional
@@ -11,6 +10,7 @@ from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 
 from src.models import LocationInfo
+from src.generators.slide_utils import add_slide_header, add_logo, add_source_text
 
 
 def add_location_slide(
@@ -20,109 +20,105 @@ def add_location_slide(
     logo_path: Optional[str] = None,
 ):
     """
-    입지정보 슬라이드 추가
+    입지정보 슬라이드 추가 (레퍼런스 레이아웃)
 
-    Args:
-        prs: Presentation 객체
-        complex_name: 단지명
-        location_info: 입지 정보
-        logo_path: 회사 로고 경로
+    좌측: 최근접 역까지 경로 (도보 or 대중교통)
+    우측: 강남역까지 대중교통 경로
     """
     slide_layout = prs.slide_layouts[6]
     slide = prs.slides.add_slide(slide_layout)
 
-    # 헤더
-    _add_slide_header(slide, complex_name, "입지정보")
+    # 공통 헤더
+    add_slide_header(slide, complex_name, "입지정보")
 
-    # ── 역 정보 텍스트 ──
-    station_text = ""
-    if location_info.nearest_station:
-        station_text = f"{location_info.nearest_station}"
-        if location_info.station_line:
-            station_text += f"({location_info.station_line})"
-        station_text += f" - 도보 {location_info.walk_minutes}분"
-
-    gangnam_text = f"강남역 - 대중교통 {location_info.gangnam_minutes}분"
-
-    txBox = slide.shapes.add_textbox(
-        Inches(0.5), Inches(1.1), Inches(9), Inches(0.8)
-    )
-    tf = txBox.text_frame
-    tf.word_wrap = True
-
-    if station_text:
+    # ── 좌측 라벨: 최근접 역 소요시간 ──
+    station_label = _build_station_label(location_info)
+    if station_label:
+        label_left = slide.shapes.add_textbox(
+            Inches(0.678), Inches(0.987),
+            Inches(4.0), Inches(0.35),
+        )
+        tf = label_left.text_frame
         p = tf.paragraphs[0]
-        p.text = station_text
-        p.font.size = Pt(14)
+        p.text = station_label
+        p.font.size = Pt(12)
         p.font.bold = True
         p.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
-        p.space_after = Pt(4)
 
-        p2 = tf.add_paragraph()
-        p2.text = gangnam_text
-        p2.font.size = Pt(14)
-        p2.font.bold = True
-        p2.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
-    else:
-        tf.paragraphs[0].text = gangnam_text
-        tf.paragraphs[0].font.size = Pt(14)
-        tf.paragraphs[0].font.bold = True
-        tf.paragraphs[0].font.color.rgb = RGBColor(0x33, 0x33, 0x33)
-
-    # ── 도보 경로 지도 (좌측) ──
-    walk_label = slide.shapes.add_textbox(
-        Inches(0.5), Inches(2.0), Inches(4.3), Inches(0.3)
+    # ── 우측 라벨: 강남역 대중교통 ──
+    gangnam_text = f"[강남역 - 대중교통 {location_info.gangnam_minutes}분]"
+    label_right = slide.shapes.add_textbox(
+        Inches(4.998), Inches(0.987),
+        Inches(4.5), Inches(0.35),
     )
-    walk_label.text_frame.paragraphs[0].text = "도보 경로"
-    walk_label.text_frame.paragraphs[0].font.size = Pt(10)
-    walk_label.text_frame.paragraphs[0].font.bold = True
-    walk_label.text_frame.paragraphs[0].font.color.rgb = RGBColor(0xC8, 0x10, 0x2E)
+    tf2 = label_right.text_frame
+    p2 = tf2.paragraphs[0]
+    p2.text = gangnam_text
+    p2.font.size = Pt(12)
+    p2.font.bold = True
+    p2.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
 
+    # ── 좌측 지도 이미지 ──
     if (location_info.walk_route_image_path
             and os.path.exists(location_info.walk_route_image_path)):
         slide.shapes.add_picture(
             location_info.walk_route_image_path,
-            Inches(0.5), Inches(2.3), Inches(4.3), Inches(3.5)
+            Inches(0.678), Inches(1.384),
+            Inches(3.956), Inches(3.935),
         )
     else:
-        _add_placeholder_text(slide, Inches(0.5), Inches(2.3), Inches(4.3), Inches(3.5),
-                              "[도보 경로 지도]")
+        _add_placeholder_text(
+            slide,
+            Inches(0.678), Inches(1.384),
+            Inches(3.956), Inches(3.935),
+            "[최근접역 경로 지도]",
+        )
 
-    # ── 대중교통 경로 지도 (우측) ──
-    transit_label = slide.shapes.add_textbox(
-        Inches(5.2), Inches(2.0), Inches(4.3), Inches(0.3)
-    )
-    transit_label.text_frame.paragraphs[0].text = "대중교통 경로 (→ 강남역)"
-    transit_label.text_frame.paragraphs[0].font.size = Pt(10)
-    transit_label.text_frame.paragraphs[0].font.bold = True
-    transit_label.text_frame.paragraphs[0].font.color.rgb = RGBColor(0xC8, 0x10, 0x2E)
-
+    # ── 우측 지도 이미지 ──
     if (location_info.transit_route_image_path
             and os.path.exists(location_info.transit_route_image_path)):
         slide.shapes.add_picture(
             location_info.transit_route_image_path,
-            Inches(5.2), Inches(2.3), Inches(4.3), Inches(3.5)
+            Inches(4.998), Inches(1.387),
+            Inches(3.905), Inches(3.935),
         )
     else:
-        _add_placeholder_text(slide, Inches(5.2), Inches(2.3), Inches(4.3), Inches(3.5),
-                              "[대중교통 경로 지도]")
-
-    # ── 출처 ──
-    txBox3 = slide.shapes.add_textbox(
-        Inches(0.5), Inches(6.5), Inches(5), Inches(0.3)
-    )
-    p3 = txBox3.text_frame.paragraphs[0]
-    p3.text = "*네이버지도 (https://map.naver.com)"
-    p3.font.size = Pt(8)
-    p3.font.color.rgb = RGBColor(0x99, 0x99, 0x99)
-
-    # ── 로고 ──
-    if logo_path and os.path.exists(logo_path):
-        slide.shapes.add_picture(
-            logo_path, Inches(7.5), Inches(6.2), Inches(2), Inches(0.6)
+        _add_placeholder_text(
+            slide,
+            Inches(4.998), Inches(1.387),
+            Inches(3.905), Inches(3.935),
+            "[강남역 대중교통 경로]",
         )
 
+    # 출처
+    add_source_text(slide, "*네이버지도")
+
+    # 로고
+    add_logo(slide, logo_path)
+
     return slide
+
+
+def _build_station_label(location_info: LocationInfo) -> str:
+    """
+    최근접 역 라벨 생성
+
+    - 역과 가까우면(도보 10분 이내): "[역명(노선) - 도보 N분]"
+    - 역이 멀면: "[역명(노선) - 대중교통 N분]"
+    """
+    station = location_info.nearest_station
+    if not station or station == "정보 없음":
+        return ""
+
+    line_text = f"({location_info.station_line})" if location_info.station_line else ""
+
+    if location_info.walk_minutes <= 10:
+        # 도보권 — 도보 시간만 표시
+        return f"[{station}{line_text} - 도보 {location_info.walk_minutes}분]"
+    else:
+        # 역이 멀다 — 대중교통 시간 표시
+        transit_min = location_info.station_transit_minutes or location_info.walk_minutes
+        return f"[{station}{line_text} - 대중교통 {transit_min}분]"
 
 
 def _add_placeholder_text(slide, left, top, width, height, text):
@@ -139,42 +135,3 @@ def _add_placeholder_text(slide, left, top, width, height, text):
     p.font.size = Pt(14)
     p.font.color.rgb = RGBColor(0x99, 0x99, 0x99)
     p.alignment = PP_ALIGN.CENTER
-
-
-def _add_slide_header(slide, title: str, subtitle: str):
-    """슬라이드 공통 헤더 (제목 + 서브타이틀)"""
-    # 좌측 빨간 마커
-    marker = slide.shapes.add_shape(
-        1, Inches(0.3), Inches(0.35), Pt(8), Inches(0.4)
-    )
-    marker.fill.solid()
-    marker.fill.fore_color.rgb = RGBColor(0xC8, 0x10, 0x2E)
-    marker.line.fill.background()
-
-    # 단지명
-    txBox = slide.shapes.add_textbox(
-        Inches(0.6), Inches(0.3), Inches(6), Inches(0.5)
-    )
-    p = txBox.text_frame.paragraphs[0]
-    p.text = title
-    p.font.size = Pt(22)
-    p.font.bold = True
-    p.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
-
-    # 우측 서브타이틀
-    txBox2 = slide.shapes.add_textbox(
-        Inches(7.5), Inches(0.3), Inches(2), Inches(0.5)
-    )
-    p2 = txBox2.text_frame.paragraphs[0]
-    p2.text = subtitle
-    p2.font.size = Pt(14)
-    p2.font.color.rgb = RGBColor(0x99, 0x99, 0x99)
-    p2.alignment = PP_ALIGN.RIGHT
-
-    # 구분선
-    line = slide.shapes.add_shape(
-        1, Inches(0.3), Inches(0.85), Inches(9.4), Pt(1)
-    )
-    line.fill.solid()
-    line.fill.fore_color.rgb = RGBColor(0xE0, 0xE0, 0xE0)
-    line.line.fill.background()

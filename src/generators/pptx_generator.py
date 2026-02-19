@@ -11,7 +11,7 @@ from pptx.util import Inches
 
 from src.models import AgentProfile, ComplexData
 from src.generators.slide_cover import add_cover_slide
-from src.generators.slide_agent import add_agent_slide
+from src.generators.slide_agent import add_agent_slide_from_collection
 from src.generators.slide_list import add_list_slide
 from src.generators.slide_overview import add_overview_slide
 from src.generators.slide_location import add_location_slide
@@ -30,6 +30,7 @@ def generate_briefing_pptx(
     complex_data_list: List[ComplexData],
     output_dir: str = "output",
     background_path: Optional[str] = None,
+    profile_pptx_path: Optional[str] = None,
 ) -> str:
     """
     브리핑 PPT 생성 메인 함수
@@ -46,14 +47,19 @@ def generate_briefing_pptx(
         complex_data_list: 단지별 통합 데이터 리스트
         output_dir: 출력 디렉토리
         background_path: 표지 배경 이미지 경로
+        profile_pptx_path: 중개파트너 프로필 모음 PPTX 경로
 
     Returns:
         생성된 PPT 파일 경로
     """
-    # 16:9 와이드스크린 프레젠테이션
+    # 슬라이드 크기: 10" × 6.25"
     prs = Presentation()
     prs.slide_width = Inches(10)
-    prs.slide_height = Inches(7.5)
+    prs.slide_height = Inches(6.25)
+
+    # 프로필 모음 PPTX 경로 (기본값)
+    if profile_pptx_path is None:
+        profile_pptx_path = "중개파트너별 프로필 페이지 모음.pptx"
 
     # 단지명 목록
     complex_names = [cd.complex_info.name for cd in complex_data_list]
@@ -71,7 +77,7 @@ def generate_briefing_pptx(
 
     # ─── 2. 중개사 소개 ───
     print("  → 중개사 소개 슬라이드 생성")
-    add_agent_slide(prs, agent)
+    add_agent_slide_from_collection(prs, agent.name, profile_pptx_path)
 
     # ─── 3. 물건 리스트 ───
     print("  → 물건리스트 슬라이드 생성")

@@ -19,7 +19,7 @@ from src.models import (
     PropertyDetail,
 )
 from src.utils.url_parser import parse_naver_land_url
-from src.crawlers.naver_land import fetch_complex_info, fetch_property_detail
+from src.crawlers.naver_land import fetch_complex_info, fetch_property_detail, fetch_school_basic_from_ssr
 from src.crawlers.asil import fetch_price_info, fetch_price_info_mock
 from src.crawlers.naver_map import fetch_location_info
 from src.crawlers.school_zone import fetch_school_info
@@ -163,12 +163,18 @@ def run_pipeline(
 
         # 학군정보 (Phase 2)
         print(f"  학군정보 수집...")
+        ssr_schools = None
+        if not use_mock:
+            ssr_schools = fetch_school_basic_from_ssr(complex_id)
         school_info = fetch_school_info(
             complex_id=complex_id,
             complex_name=complex_info.name,
             address=complex_info.address,
+            complex_lat=complex_info.latitude or 0.0,
+            complex_lng=complex_info.longitude or 0.0,
             temp_dir=temp_dir,
             use_mock=use_mock,
+            ssr_schools=ssr_schools,
         )
         if school_info:
             print(f"  학군정보: {school_info.elementary_name}")

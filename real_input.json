@@ -1,14 +1,11 @@
 {
-  "customer_name": "한신테스트",
+  "customer_name": "테스트고객",
   "properties": [
     {
-      "naver_land_url": "https://new.land.naver.com/complexes/824?articleNo=2609089367",
-      "price": "9억",
-      "dong": "108동",
-      "floor": "2/26층",
-      "direction": "남향",
-      "structure": "방3 화장실2",
-      "memo": "샷시 및 올수리 귀한 정남향 입주가능 강추매물"
+      "naver_land_url": "https://new.land.naver.com/complexes/605?ms=37.494447,127.146801,17&a=APT:ABYG:JGC:PRE&e=RETAIL&articleNo=2608769690",
+      "price": "매물가격",
+      "dong": "매물동",
+      "floor": "매물층"
     }
   ]
 }

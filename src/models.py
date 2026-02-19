@@ -61,8 +61,9 @@ class LocationInfo(BaseModel):
     complex_id: str
     nearest_station: str = ""          # "중계역"
     station_line: str = ""             # "7호선"
-    walk_minutes: int = 0              # 2
-    gangnam_minutes: int = 0           # 50
+    walk_minutes: int = 0              # 도보 소요시간 (분)
+    station_transit_minutes: int = 0   # 역까지 대중교통 소요시간 (역이 멀 때)
+    gangnam_minutes: int = 0           # 강남역까지 대중교통 소요시간
     walk_route_image_path: Optional[str] = None
     transit_route_image_path: Optional[str] = None
 
@@ -71,6 +72,17 @@ class SchoolInfo(BaseModel):
     """학군 정보 (크롤링 결과) — Phase 2"""
     complex_id: str
     elementary_name: str = ""
+    elementary_address: str = ""             # "서울특별시 중랑구 동일로126가길 11"
+    elementary_phone: str = ""               # "02-432-5237"
+    elementary_founding_date: str = ""       # "1983.10.25"
+    elementary_type: str = ""                # "공립"
+    elementary_education_office: str = ""    # "서울특별시교육청"
+    elementary_coedu: str = ""               # "남여공학"
+    elementary_student_count: str = ""       # "506명(남 253명, 여 253명)"
+    elementary_teacher_count: str = ""       # "45명"
+    elementary_homepage: str = ""            # "http://www.sang-bong.es.kr"
+    elementary_walk_distance: str = ""       # "도보 2분"
+    elementary_distance_m: int = 0           # 106 (미터)
     elementary_map_path: Optional[str] = None
     middle_high_map_path: Optional[str] = None
 

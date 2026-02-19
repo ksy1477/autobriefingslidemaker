@@ -1,5 +1,5 @@
 """
-매물정보 슬라이드 생성
+매물정보 슬라이드 생성 — 레퍼런스 PPT 양식
 """
 import os
 from typing import Optional
@@ -10,6 +10,7 @@ from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 
 from src.models import PropertyDetail
+from src.generators.slide_utils import add_slide_header, add_logo, add_source_text
 
 
 def add_property_slide(
@@ -18,56 +19,75 @@ def add_property_slide(
     logo_path: Optional[str] = None,
 ):
     """
-    매물정보 슬라이드 추가
+    매물정보 슬라이드 추가 (레퍼런스 레이아웃)
 
-    Args:
-        prs: Presentation 객체
-        prop: 매물 상세 정보
-        logo_path: 회사 로고 경로
+    - 공통 헤더
+    - 빨간 세로 마커 + "단지내 위치" 라벨 at (0.127", 1.255")
+    - 배치도 이미지: (0.084", 1.688", 2.712"×3.673")
+    - 평면도: (2.864", 1.688", 4.607"×3.673")
     """
     slide_layout = prs.slide_layouts[6]
     slide = prs.slides.add_slide(slide_layout)
 
-    # 헤더
+    # 공통 헤더
     title = f"{prop.complex_name} - {prop.dong} {prop.floor}"
-    _add_slide_header(slide, title, "매물정보")
+    add_slide_header(slide, title, "매물정보")
 
-    # 좌측: 배치도/동 위치 이미지
+    # ── 빨간 세로 마커 + "단지내 위치" 라벨 ──
+    _add_red_marker(slide, Inches(0.127), Inches(1.255))
+    label_box = slide.shapes.add_textbox(
+        Inches(0.22), Inches(1.225),
+        Inches(2), Inches(0.3),
+    )
+    lp = label_box.text_frame.paragraphs[0]
+    lp.text = "단지내 위치"
+    lp.font.size = Pt(12)
+    lp.font.bold = True
+    lp.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
+
+    # ── 빨간 세로 마커 + "평면도" 라벨 ──
+    _add_red_marker(slide, Inches(2.864), Inches(1.255))
+    label_box2 = slide.shapes.add_textbox(
+        Inches(2.96), Inches(1.225),
+        Inches(2), Inches(0.3),
+    )
+    lp2 = label_box2.text_frame.paragraphs[0]
+    lp2.text = "평면도"
+    lp2.font.size = Pt(12)
+    lp2.font.bold = True
+    lp2.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
+
+    # ── 좌측: 배치도/동 위치 이미지 (0.084", 1.688", 2.712"×3.673") ──
     if prop.dong_location_image_path and os.path.exists(prop.dong_location_image_path):
         slide.shapes.add_picture(
             prop.dong_location_image_path,
-            Inches(0.3), Inches(1.3), Inches(4.5), Inches(3.5)
+            Inches(0.084), Inches(1.688),
+            Inches(2.712), Inches(3.673),
         )
     else:
-        # placeholder
-        txBox = slide.shapes.add_textbox(
-            Inches(0.3), Inches(1.3), Inches(4.5), Inches(3.5)
+        _add_placeholder_text(
+            slide,
+            Inches(0.084), Inches(1.688),
+            Inches(2.712), Inches(3.673),
+            "[단지 내 위치]",
         )
-        tf = txBox.text_frame
-        p = tf.paragraphs[0]
-        p.text = "[단지 내 위치]"
-        p.font.size = Pt(16)
-        p.font.color.rgb = RGBColor(0xCC, 0xCC, 0xCC)
-        p.alignment = PP_ALIGN.CENTER
 
-    # 우측 상단: 평면도
+    # ── 우측: 평면도 (2.864", 1.688", 4.607"×3.673") ──
     if prop.floor_plan_image_path and os.path.exists(prop.floor_plan_image_path):
         slide.shapes.add_picture(
             prop.floor_plan_image_path,
-            Inches(5.0), Inches(1.3), Inches(4.5), Inches(2.5)
+            Inches(2.864), Inches(1.688),
+            Inches(4.607), Inches(3.673),
         )
     else:
-        txBox2 = slide.shapes.add_textbox(
-            Inches(5.0), Inches(1.3), Inches(4.5), Inches(2.5)
+        _add_placeholder_text(
+            slide,
+            Inches(2.864), Inches(1.688),
+            Inches(4.607), Inches(3.673),
+            "[평면도]",
         )
-        tf2 = txBox2.text_frame
-        p2 = tf2.paragraphs[0]
-        p2.text = "[평면도]"
-        p2.font.size = Pt(16)
-        p2.font.color.rgb = RGBColor(0xCC, 0xCC, 0xCC)
-        p2.alignment = PP_ALIGN.CENTER
 
-    # 매물 상세 정보 텍스트
+    # 매물 상세 정보 텍스트 (우측 하단)
     info_lines = []
     info_lines.append(f"매매가: {prop.price}")
     info_lines.append(f"동/층: {prop.dong} / {prop.floor}")
@@ -84,65 +104,53 @@ def add_property_slide(
         info_lines.append(f"특이사항: {prop.memo}")
 
     txBox3 = slide.shapes.add_textbox(
-        Inches(5.0), Inches(4.0), Inches(4.5), Inches(2.5)
+        Inches(7.6), Inches(1.688), Inches(2.2), Inches(3.5)
     )
     tf3 = txBox3.text_frame
     tf3.word_wrap = True
     for i, line in enumerate(info_lines):
         if i == 0:
             tf3.paragraphs[0].text = line
-            tf3.paragraphs[0].font.size = Pt(12)
+            tf3.paragraphs[0].font.size = Pt(11)
             tf3.paragraphs[0].font.bold = True
             tf3.paragraphs[0].font.color.rgb = RGBColor(0x33, 0x33, 0x33)
             tf3.paragraphs[0].space_after = Pt(4)
         else:
             p = tf3.add_paragraph()
             p.text = line
-            p.font.size = Pt(11)
+            p.font.size = Pt(10)
             p.font.color.rgb = RGBColor(0x55, 0x55, 0x55)
             p.space_after = Pt(4)
 
     # 로고
-    if logo_path and os.path.exists(logo_path):
-        slide.shapes.add_picture(
-            logo_path, Inches(7.5), Inches(6.2), Inches(2), Inches(0.6)
-        )
+    add_logo(slide, logo_path)
 
     return slide
 
 
-def _add_slide_header(slide, title: str, subtitle: str):
-    """슬라이드 공통 헤더"""
+def _add_red_marker(slide, left, top):
+    """빨간 세로 마커 (0.052"×0.197")"""
     marker = slide.shapes.add_shape(
-        1, Inches(0.3), Inches(0.35), Pt(8), Inches(0.4)
+        1,  # RECTANGLE
+        left, top,
+        Inches(0.052), Inches(0.197),
     )
     marker.fill.solid()
     marker.fill.fore_color.rgb = RGBColor(0xC8, 0x10, 0x2E)
     marker.line.fill.background()
 
-    txBox = slide.shapes.add_textbox(
-        Inches(0.6), Inches(0.3), Inches(6), Inches(0.5)
-    )
-    tf = txBox.text_frame
+
+def _add_placeholder_text(slide, left, top, width, height, text):
+    """이미지 없을 때 텍스트 placeholder"""
+    shape = slide.shapes.add_shape(1, left, top, width, height)
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = RGBColor(0xF0, 0xF0, 0xF0)
+    shape.line.fill.background()
+
+    tf = shape.text_frame
+    tf.word_wrap = True
     p = tf.paragraphs[0]
-    p.text = title
-    p.font.size = Pt(20)
-    p.font.bold = True
-    p.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
-
-    txBox2 = slide.shapes.add_textbox(
-        Inches(7.5), Inches(0.3), Inches(2), Inches(0.5)
-    )
-    tf2 = txBox2.text_frame
-    p2 = tf2.paragraphs[0]
-    p2.text = subtitle
-    p2.font.size = Pt(14)
-    p2.font.color.rgb = RGBColor(0x99, 0x99, 0x99)
-    p2.alignment = PP_ALIGN.RIGHT
-
-    line = slide.shapes.add_shape(
-        1, Inches(0.3), Inches(0.85), Inches(9.4), Pt(1)
-    )
-    line.fill.solid()
-    line.fill.fore_color.rgb = RGBColor(0xE0, 0xE0, 0xE0)
-    line.line.fill.background()
+    p.text = text
+    p.font.size = Pt(14)
+    p.font.color.rgb = RGBColor(0x99, 0x99, 0x99)
+    p.alignment = PP_ALIGN.CENTER
