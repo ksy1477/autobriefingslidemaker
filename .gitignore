@@ -6,8 +6,6 @@ venv/
 .env
 
 # Project specific
-temp/
-output/
 
 # OS
 .DS_Store
