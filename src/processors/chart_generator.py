@@ -15,14 +15,33 @@ from datetime import date
 from src.models import Transaction
 
 
+def _get_korean_font_paths():
+    """OS별 한글 폰트 경로 목록 반환"""
+    import platform
+    system = platform.system()
+
+    if system == 'Windows':
+        return [
+            "C:/Windows/Fonts/malgun.ttf",      # 맑은 고딕
+            "C:/Windows/Fonts/NanumGothic.ttf",
+            "C:/Windows/Fonts/gulim.ttc",        # 굴림
+        ]
+    elif system == 'Darwin':  # macOS
+        return [
+            "/System/Library/Fonts/AppleSDGothicNeo.ttc",
+            "/System/Library/Fonts/Supplemental/AppleGothic.ttf",
+            "/Library/Fonts/NanumGothic.ttf",
+        ]
+    else:  # Linux
+        return [
+            "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
+            "/usr/share/fonts/nhn-nanum/NanumGothic.ttf",
+        ]
+
+
 def _setup_korean_font():
-    """한글 폰트 설정"""
-    # macOS
-    font_paths = [
-        "/System/Library/Fonts/AppleSDGothicNeo.ttc",
-        "/System/Library/Fonts/Supplemental/AppleGothic.ttf",
-        "/Library/Fonts/NanumGothic.ttf",
-    ]
+    """한글 폰트 설정 (OS 자동 감지)"""
+    font_paths = _get_korean_font_paths()
     for fp in font_paths:
         if os.path.exists(fp):
             font_manager.fontManager.addfont(fp)
@@ -30,7 +49,6 @@ def _setup_korean_font():
             plt.rcParams['font.family'] = prop.get_name()
             break
     else:
-        # 기본 폰트 사용
         plt.rcParams['font.family'] = 'sans-serif'
 
     plt.rcParams['axes.unicode_minus'] = False

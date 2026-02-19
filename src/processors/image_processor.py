@@ -98,8 +98,15 @@ def create_placeholder_image(
 
     if text:
         try:
-            # 시스템 폰트 시도
-            font = ImageFont.truetype("/System/Library/Fonts/AppleSDGothicNeo.ttc", 20)
+            import platform
+            system = platform.system()
+            if system == 'Windows':
+                font_path = "C:/Windows/Fonts/malgun.ttf"
+            elif system == 'Darwin':
+                font_path = "/System/Library/Fonts/AppleSDGothicNeo.ttc"
+            else:
+                font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
+            font = ImageFont.truetype(font_path, 20)
         except Exception:
             font = ImageFont.load_default()
 
