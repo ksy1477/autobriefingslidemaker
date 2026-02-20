@@ -19,8 +19,8 @@ from src.models import (
     PropertyDetail,
 )
 from src.utils.url_parser import parse_naver_land_url
-from src.crawlers.naver_land import fetch_complex_info, fetch_property_detail, fetch_school_basic_from_ssr
-from src.crawlers.asil import fetch_price_info, fetch_price_info_mock
+from src.crawlers.naver_land import fetch_complex_info, fetch_property_detail, fetch_school_basic_from_ssr, capture_complex_images, capture_complex_detail_screenshot
+from src.crawlers.asil import fetch_price_info, fetch_price_info_mock, capture_asil_price_chart
 from src.crawlers.naver_map import fetch_location_info
 from src.crawlers.school_zone import fetch_school_info
 from src.processors.data_aggregator import (
@@ -122,6 +122,12 @@ def run_pipeline(
                 print(f"  [WARN] 단지정보 조회 실패, mock 데이터 사용")
                 complex_info = _create_mock_complex_info(complex_id, prop_inputs)
 
+        # 단지정보 상세 스크린샷 캡처 (4페이지 우측)
+        if not use_mock:
+            detail_screenshot = capture_complex_detail_screenshot(complex_id, temp_dir)
+            if detail_screenshot:
+                complex_info.satellite_map_path = detail_screenshot
+
         # 해시태그 업데이트
         complex_info.hashtags = generate_hashtags(complex_info)
         print(f"  단지명: {complex_info.name}")
@@ -134,16 +140,27 @@ def run_pipeline(
                 complex_id, complex_info.name, api_key=api_key
             )
 
-        # 실거래가 그래프 생성
-        if price_info and price_info.recent_transactions:
-            chart_path = os.path.join(temp_dir, complex_id, "price_chart.png")
+        # 실거래가 그래프 생성 (아실 캡처 → matplotlib fallback)
+        chart_path = os.path.join(temp_dir, complex_id, "price_chart.png")
+        asil_result = None
+        if not use_mock:
+            asil_result = capture_asil_price_chart(
+                complex_info.name, complex_id, complex_info.address, chart_path
+            )
+        if asil_result:
+            # 아실 데이터로 price_info 대체
+            if asil_result.get("price_info"):
+                price_info = asil_result["price_info"]
+            if price_info:
+                price_info.price_graph_image_path = asil_result["chart_path"]
+        elif price_info and price_info.recent_transactions:
             generate_price_chart(
                 price_info.recent_transactions,
                 complex_info.name,
                 chart_path,
             )
             price_info.price_graph_image_path = chart_path
-            print(f"  실거래가 그래프 생성 완료")
+            print(f"  실거래가 그래프 생성 완료 (matplotlib)")
 
         # 입지정보 (Phase 2)
         print(f"  입지정보 수집...")
@@ -201,6 +218,19 @@ def run_pipeline(
                 )
             properties.append(detail)
             print(f"  매물: {prop_input.dong} {prop_input.floor} - {prop_input.price}")
+
+        # 단지 이미지 캡처 (평면도 + 단지위치)
+        if not use_mock:
+            for prop in properties:
+                images = capture_complex_images(
+                    complex_id,
+                    prop.area_pyeong or "",
+                    temp_dir,
+                    latitude=complex_info.latitude or 0.0,
+                    longitude=complex_info.longitude or 0.0,
+                )
+                prop.floor_plan_image_path = images.get("floor_plan_path")
+                prop.dong_location_image_path = images.get("site_plan_path")
 
         complex_data = ComplexData(
             complex_info=complex_info,

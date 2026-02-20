@@ -121,6 +121,9 @@ def generate_briefing_pptx(
             print(f"  → [{ci.name}] {prop.dong} {prop.floor} 매물정보 슬라이드 생성")
             add_property_slide(prs, prop, logo_path=logo_path)
 
+    # ─── 전체 서체 통일 ───
+    _apply_font_to_all(prs, "Noto Sans KR")
+
     # ─── 파일 저장 ───
     os.makedirs(output_dir, exist_ok=True)
     today_str = date.today().strftime("%Y%m%d")
@@ -134,3 +137,19 @@ def generate_briefing_pptx(
     print(f"  슬라이드 수: {slide_count}장")
 
     return output_path
+
+
+def _apply_font_to_all(prs: Presentation, font_name: str):
+    """프레젠테이션 내 모든 텍스트 run의 서체를 font_name으로 변경"""
+    for slide in prs.slides:
+        for shape in slide.shapes:
+            if shape.has_text_frame:
+                for paragraph in shape.text_frame.paragraphs:
+                    for run in paragraph.runs:
+                        run.font.name = font_name
+            if shape.has_table:
+                for row in shape.table.rows:
+                    for cell in row.cells:
+                        for paragraph in cell.text_frame.paragraphs:
+                            for run in paragraph.runs:
+                                run.font.name = font_name

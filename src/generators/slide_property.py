@@ -87,40 +87,89 @@ def add_property_slide(
             "[평면도]",
         )
 
-    # 매물 상세 정보 텍스트 (우측 하단)
-    info_lines = []
-    info_lines.append(f"매매가: {prop.price}")
-    info_lines.append(f"동/층: {prop.dong} / {prop.floor}")
-    if prop.area_pyeong:
-        info_lines.append(f"전용면적: {prop.area_pyeong} ({prop.area_m2}㎡)" if prop.area_m2 else f"전용면적: {prop.area_pyeong}")
+    # ── 빨간 세로 마커 + "매물 상세" 라벨 ──
+    _add_red_marker(slide, Inches(7.54), Inches(1.255))
+    label_box3 = slide.shapes.add_textbox(
+        Inches(7.635), Inches(1.225),
+        Inches(2), Inches(0.3),
+    )
+    lp3 = label_box3.text_frame.paragraphs[0]
+    lp3.text = "매물 상세"
+    lp3.font.size = Pt(12)
+    lp3.font.bold = True
+    lp3.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
+
+    # ── 매물 상세 정보 테이블 (우측) ──
+    info_rows = []
+    info_rows.append(("매매가", prop.price))
+    info_rows.append(("동 / 층", f"{prop.dong} / {prop.floor}"))
+    if prop.area_m2:
+        info_rows.append(("전용면적", f"{prop.area_m2}㎡"))
     if prop.direction:
-        info_lines.append(f"향: {prop.direction}")
+        info_rows.append(("향", prop.direction))
     if prop.structure:
-        info_lines.append(f"구조: {prop.structure}")
+        info_rows.append(("구조", prop.structure))
     if prop.rooms is not None:
         bath_text = f" / 화장실 {prop.bathrooms}개" if prop.bathrooms else ""
-        info_lines.append(f"방 {prop.rooms}개{bath_text}")
+        info_rows.append(("방/화장실", f"방 {prop.rooms}개{bath_text}"))
     if prop.memo:
-        info_lines.append(f"특이사항: {prop.memo}")
+        info_rows.append(("특이사항", prop.memo))
 
-    txBox3 = slide.shapes.add_textbox(
-        Inches(7.6), Inches(1.688), Inches(2.2), Inches(3.5)
+    row_count = len(info_rows)
+    tbl_left = Inches(7.54)
+    tbl_top = Inches(1.688)
+    tbl_width = Inches(2.3)
+    row_height = Inches(0.38)
+    tbl_height = row_height * row_count
+
+    table_shape = slide.shapes.add_table(
+        row_count, 2,
+        tbl_left, tbl_top,
+        tbl_width, tbl_height,
     )
-    tf3 = txBox3.text_frame
-    tf3.word_wrap = True
-    for i, line in enumerate(info_lines):
-        if i == 0:
-            tf3.paragraphs[0].text = line
-            tf3.paragraphs[0].font.size = Pt(11)
-            tf3.paragraphs[0].font.bold = True
-            tf3.paragraphs[0].font.color.rgb = RGBColor(0x33, 0x33, 0x33)
-            tf3.paragraphs[0].space_after = Pt(4)
-        else:
-            p = tf3.add_paragraph()
-            p.text = line
-            p.font.size = Pt(10)
-            p.font.color.rgb = RGBColor(0x55, 0x55, 0x55)
-            p.space_after = Pt(4)
+    table = table_shape.table
+    table.columns[0].width = Inches(0.78)
+    table.columns[1].width = Inches(1.52)
+
+    BRAND_RED = RGBColor(0xC8, 0x10, 0x2E)
+    LABEL_BG = RGBColor(0xF5, 0xF5, 0xF5)
+    WHITE = RGBColor(0xFF, 0xFF, 0xFF)
+    DARK = RGBColor(0x33, 0x33, 0x33)
+    GRAY = RGBColor(0x55, 0x55, 0x55)
+    BORDER = RGBColor(0xE0, 0xE0, 0xE0)
+
+    for row_idx, (label, value) in enumerate(info_rows):
+        # 라벨 셀 (좌)
+        label_cell = table.cell(row_idx, 0)
+        label_cell.text = label
+        label_cell.fill.solid()
+        label_cell.fill.fore_color.rgb = LABEL_BG
+        for p in label_cell.text_frame.paragraphs:
+            p.font.size = Pt(8)
+            p.font.bold = True
+            p.font.color.rgb = DARK
+            p.alignment = PP_ALIGN.CENTER
+        label_cell.text_frame.word_wrap = True
+        label_cell.margin_left = Pt(4)
+        label_cell.margin_right = Pt(4)
+        label_cell.margin_top = Pt(2)
+        label_cell.margin_bottom = Pt(2)
+
+        # 값 셀 (우)
+        value_cell = table.cell(row_idx, 1)
+        value_cell.text = value
+        value_cell.fill.solid()
+        value_cell.fill.fore_color.rgb = WHITE
+        is_price = (label == "매매가")
+        for p in value_cell.text_frame.paragraphs:
+            p.font.size = Pt(9) if is_price else Pt(8)
+            p.font.bold = is_price
+            p.font.color.rgb = BRAND_RED if is_price else GRAY
+        value_cell.text_frame.word_wrap = True
+        value_cell.margin_left = Pt(6)
+        value_cell.margin_right = Pt(4)
+        value_cell.margin_top = Pt(2)
+        value_cell.margin_bottom = Pt(2)
 
     # 로고
     add_logo(slide, logo_path)

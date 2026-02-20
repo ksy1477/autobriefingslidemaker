@@ -78,13 +78,13 @@ def add_slide_header(slide, title: str, subtitle: str):
 def add_logo(slide, logo_path: Optional[str] = None):
     """
     중앙 하단 로고 이미지
-    위치: (4.139", 5.726", 1.678"×0.478")
+    위치: (4.139", 5.726", 1.68"×0.48")
     """
     if logo_path and os.path.exists(logo_path):
         slide.shapes.add_picture(
             logo_path,
             Inches(4.139), Inches(5.726),
-            Inches(1.678), Inches(0.478),
+            Inches(1.68), Inches(0.48),
         )
 
 

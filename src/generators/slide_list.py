@@ -22,7 +22,7 @@ def add_list_slide(
     물건리스트 슬라이드 추가 (레퍼런스 레이아웃)
 
     - Group 장식 마커 + 제목 (21pt bold)
-    - 8열 테이블: 지역, 단지명, 동/호수, 평형(전용), 매매가격, 향/구조, 특이사항, 비고
+    - 8열 테이블: 지역, 단지명, 동/호수, 공급(전용)㎡, 매매가격, 향/구조, 특이사항, 비고
     - 헤더: EFEFEF 배경, 검정 10pt bold
     """
     slide_layout = prs.slide_layouts[6]
@@ -38,7 +38,7 @@ def add_list_slide(
             all_properties.append((cdata, prop))
 
     # 8열 테이블
-    cols = 8  # 지역, 단지명, 동/호수, 평형(전용), 매매가격, 향/구조, 특이사항, 비고
+    cols = 8  # 지역, 단지명, 동/호수, 공급(전용)㎡, 매매가격, 향/구조, 특이사항, 비고
     rows = len(all_properties) + 1  # 헤더 + 데이터
 
     if rows < 2:
@@ -54,19 +54,19 @@ def add_list_slide(
     # 열 너비 설정
     col_widths = [
         Inches(0.8),   # 지역
-        Inches(2.0),   # 단지명
-        Inches(1.0),   # 동/호수
-        Inches(0.9),   # 평형(전용)
+        Inches(1.8),   # 단지명
+        Inches(0.9),   # 동/호수
+        Inches(1.3),   # 공급(전용)㎡
         Inches(1.0),   # 매매가격
         Inches(1.0),   # 향/구조
-        Inches(1.7),   # 특이사항
+        Inches(1.6),   # 특이사항
         Inches(0.74),  # 비고
     ]
     for i, w in enumerate(col_widths):
         table.columns[i].width = w
 
     # 헤더: EFEFEF 배경, 검정 10pt bold
-    headers = ["지역", "단지명", "동/호수", "평형(전용)", "매매가격", "향/구조", "특이사항", "비고"]
+    headers = ["지역", "단지명", "동/호수", "공급(전용)㎡", "매매가격", "향/구조", "특이사항", "비고"]
     for i, header in enumerate(headers):
         cell = table.cell(0, i)
         cell.text = header
@@ -97,7 +97,13 @@ def add_list_slide(
             parts = ", ".join(filter(None, [year_suffix, units_suffix]))
             complex_display = f"{ci.name} ({parts})"
 
-        area_text = prop.area_pyeong or ""
+        # 공급면적(전용면적) ㎡ 형태로 표시
+        if prop.supply_area_m2 and prop.area_m2:
+            area_text = f"{prop.supply_area_m2:.2f}({prop.area_m2:.2f})"
+        elif prop.area_m2:
+            area_text = f"{prop.area_m2:.2f}"
+        else:
+            area_text = prop.area_pyeong or ""
         direction_structure = " ".join(
             filter(None, [prop.direction, prop.structure])
         )

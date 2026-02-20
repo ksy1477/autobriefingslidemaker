@@ -223,33 +223,172 @@ def fetch_school_info_mock(
 # ─── Playwright: 중·고등학교 학군 (asil.kr) ───
 
 async def _capture_middle_high_school_zone(
-    address: str,
+    complex_lat: float,
+    complex_lng: float,
     save_path: str,
-    timeout: int = 30000,
+    timeout: int = 45000,
 ) -> Optional[str]:
-    """아실에서 중·고등학교 학군 지도 스크린샷 캡처"""
+    """
+    아실(asil.kr) 메인 지도에서 중·고등학교 학군 지도 스크린샷 캡처
+
+    전략:
+    1. asil.kr/asil/index.jsp 접속 → 지도 초기화 대기
+    2. moveMap()으로 단지 좌표 이동 (zoom 14 ≈ 2~3km 반경)
+    3. 학교 모드 활성화 (clickBigdata(10)) + 중고등 필터 (setSchoolClass(4))
+    4. 중개 마커 비활성화 (clickMemberPin)
+    5. 상단/좌/우 UI 숨기고 지도만 전체화면 표시
+    6. 스크린샷 캡처
+    """
     from src.crawlers.browser_utils import get_browser_page
 
+    if not complex_lat or not complex_lng:
+        print(f"  [WARN] 중·고등학교 학군: 좌표 없음")
+        return None
+
     try:
-        async with get_browser_page() as page:
-            url = "https://asil.kr/asil/svl/schoolZone"
-            await page.goto(url, wait_until="networkidle", timeout=timeout)
+        async with get_browser_page(viewport_width=1400, viewport_height=900) as page:
+            # 1. 아실 메인 지도 접속
+            await page.goto(
+                "https://asil.kr/asil/index.jsp",
+                wait_until="domcontentloaded",
+                timeout=timeout,
+            )
+
+            # 지도 초기화 대기 (Naver Map + moveMap 함수 로드)
+            try:
+                await page.wait_for_function(
+                    'typeof map !== "undefined" && typeof moveMap === "function"',
+                    timeout=15000,
+                )
+            except Exception:
+                print(f"  [WARN] 아실 지도 초기화 대기 실패")
+                return None
+
+            await page.wait_for_timeout(2000)
+
+            # 2. 단지 좌표로 이동
+            await page.evaluate(f'moveMap({complex_lat}, {complex_lng}, 15)')
+            await page.wait_for_timeout(2000)
+
+            # 3. 학교 모드 활성화 + 중고등학교 필터
+            #    setSchoolClass(4) 내부에서 clickBigdata(10)을 호출
+            await page.evaluate('setSchoolClass(4)')
             await page.wait_for_timeout(3000)
 
-            search_input = await page.query_selector(
-                "input[type='text'], input[placeholder*='검색'], #search"
-            )
-            if search_input:
-                await search_input.fill(address)
-                await page.keyboard.press("Enter")
-                await page.wait_for_timeout(5000)
+            # 줌이 리셋될 수 있으므로 좌표/줌 재설정 후 학교 데이터 갱신
+            await page.evaluate(f'''(() => {{
+                map.setCenter(new naver.maps.LatLng({complex_lat}, {complex_lng}));
+                map.setZoom(15, false);
+            }})()''')
+            await page.wait_for_timeout(1000)
+            await page.evaluate('updateMap()')
+            await page.wait_for_timeout(4000)
 
+            # 4. 비학교 오버레이 모두 제거 (재건축/재개발/중개 등)
+            await page.evaluate('''() => {
+                // 재건축/재개발 텍스트 라벨 제거
+                if (typeof redevelopTextArray !== 'undefined' && Array.isArray(redevelopTextArray)) {
+                    for (const item of redevelopTextArray) {
+                        try { item.setMap(null); } catch(e) {}
+                    }
+                    redevelopTextArray.length = 0;
+                }
+
+                // 재건축/재개발 폴리곤 제거
+                if (typeof redevelopPolygonArray !== 'undefined' && Array.isArray(redevelopPolygonArray)) {
+                    for (const item of redevelopPolygonArray) {
+                        try { item.setMap(null); } catch(e) {}
+                    }
+                    redevelopPolygonArray.length = 0;
+                }
+
+                // 중개사무소 마커 제거
+                if (typeof memberArray !== 'undefined' && Array.isArray(memberArray)) {
+                    for (const item of memberArray) {
+                        try { item.setMap(null); } catch(e) {}
+                    }
+                    memberArray.length = 0;
+                }
+
+                // 학군 폴리곤 제거 (학교 핀만 남기기)
+                if (typeof eduPolygonArray !== 'undefined' && Array.isArray(eduPolygonArray)) {
+                    for (const item of eduPolygonArray) {
+                        try { item.setMap(null); } catch(e) {}
+                    }
+                    eduPolygonArray.length = 0;
+                }
+                if (typeof eduTextArray !== 'undefined' && Array.isArray(eduTextArray)) {
+                    for (const item of eduTextArray) {
+                        try { item.setMap(null); } catch(e) {}
+                    }
+                    eduTextArray.length = 0;
+                }
+
+                // polygonArray도 정리
+                if (typeof polygonArray !== 'undefined' && Array.isArray(polygonArray)) {
+                    for (const item of polygonArray) {
+                        try { item.setMap(null); } catch(e) {}
+                    }
+                    polygonArray.length = 0;
+                }
+
+                // DOM 상의 아파트 라벨/핀 숨기기
+                document.querySelectorAll('.pin_label, .pin_label2, .apt_label, .mmbrPin').forEach(el => {
+                    el.style.setProperty('display', 'none', 'important');
+                });
+            }''')
+            await page.wait_for_timeout(500)
+
+            # 5. 학군 패널 및 모든 UI 오버레이 숨기기 (지도 레이아웃은 유지)
+            await page.evaluate('''() => {
+                const hideSelectors = [
+                    // 학군 분석 패널
+                    '#sub2_div', '#sub3_div', '#sub4_div',
+                    // 좌/우 사이드바 버튼 (경매, 교통, 단지, 매물, 중개, 재재, 학군 등)
+                    '.map_item',
+                    // 우측 메뉴 패널
+                    '#menuDiv', '#menuFrm',
+                    // 필터 드롭다운
+                    '.filter_item', '.filter_btn',
+                    // 설명/팝업
+                    '.map_explan', '.explan', '.map_auction', '.map_popup',
+                    '.info_area', '.popup', '.overlay', '.toast',
+                    // 상단 위치 표시 (브레드크럼)
+                    '.location_area', '[class*="location"]', '.addr_area',
+                    // 네이버지도 컨트롤/저작권
+                    '.map_copyright', '[class*="btn_zoom"]', '[class*="zoom_control"]',
+                    '[class*="naver_logo"]',
+                ];
+                for (const sel of hideSelectors) {
+                    try {
+                        document.querySelectorAll(sel).forEach(el => {
+                            el.style.setProperty('display', 'none', 'important');
+                        });
+                    } catch(e) {}
+                }
+
+                // Naver Map 내부 줌 컨트롤 숨기기 (로고/저작권은 유지)
+                const mapEl = document.getElementById('map');
+                if (mapEl) {
+                    mapEl.querySelectorAll('[class*="zoom"], [class*="btn_"]').forEach(el => {
+                        // 저작권/로고는 출처 표시이므로 유지
+                        if (!el.className.includes('copyright') && !el.className.includes('logo')) {
+                            el.style.setProperty('display', 'none', 'important');
+                        }
+                    });
+                }
+            }''')
+            await page.wait_for_timeout(1000)
+
+            # 6. #map 요소만 스크린샷 (레이아웃 변경 없이)
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            await page.screenshot(path=save_path, full_page=False)
+            map_el = page.locator('#map')
+            await map_el.screenshot(path=save_path)
+            print(f"  [학군] 중·고등학교 학군지도 저장: {os.path.basename(save_path)}")
             return save_path
 
     except Exception as e:
-        print(f"[WARN] 중·고등학교 학군 캡처 실패: {e}")
+        print(f"  [WARN] 중·고등학교 학군 캡처 실패: {e}")
         return None
 
 
@@ -287,9 +426,9 @@ async def _fetch_school_info_async(
         else:
             print(f"  [WARN] {elementary_name} 좌표를 찾을 수 없습니다")
 
-    # ── 2. 중·고등학교 학군지도 ──
+    # ── 2. 중·고등학교 학군지도 (아실 메인 지도) ──
     mh_img = os.path.join(img_dir, "middle_high_zone.png")
-    await _capture_middle_high_school_zone(address, mh_img)
+    await _capture_middle_high_school_zone(complex_lat, complex_lng, mh_img)
 
     # placeholder 대체
     if not os.path.exists(elem_img):

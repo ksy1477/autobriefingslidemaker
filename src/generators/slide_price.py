@@ -2,6 +2,7 @@
 실거래가 슬라이드 생성 — 레퍼런스 PPT 양식
 """
 import os
+from datetime import date
 from typing import Optional, List
 
 from pptx import Presentation
@@ -11,6 +12,35 @@ from pptx.enum.text import PP_ALIGN
 
 from src.models import PriceInfo
 from src.generators.slide_utils import add_slide_header, add_logo, add_source_text
+
+
+def _filter_recent_transactions(price_info: PriceInfo) -> list:
+    """
+    최근 실거래 내역 필터링
+    1) 최근 3개월 내역이 3건 이상이면 전부 표시
+    2) 3건 미만이면 6개월로 확대
+    3) 6개월도 3건 미만이면 그대로 표시
+    """
+    today = date.today()
+
+    def _months_ago(n: int) -> date:
+        m = today.month - n
+        y = today.year
+        while m <= 0:
+            m += 12
+            y -= 1
+        return date(y, m, 1)
+
+    all_txns = price_info.recent_transactions
+    cutoff_3m = _months_ago(3)
+    txns_3m = [t for t in all_txns if t.date >= cutoff_3m]
+
+    if len(txns_3m) >= 3:
+        return txns_3m
+
+    cutoff_6m = _months_ago(6)
+    txns_6m = [t for t in all_txns if t.date >= cutoff_6m]
+    return txns_6m
 
 
 def add_price_slide(
@@ -78,51 +108,59 @@ def add_price_slide(
     rp.font.bold = True
     rp.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
 
-    # ── 좌측: 최근 실거래 테이블 (0.713", 2.102") ──
-    transactions = price_info.recent_transactions[:6]
-    if transactions:
-        cols = 4
-        rows = len(transactions) + 1
-        table_shape = slide.shapes.add_table(
-            rows, cols,
+    # ── 좌측: 최근 실거래 (0.713", 2.102") ──
+    # 아실 거래내역 스크린샷이 있으면 이미지, 없으면 테이블 생성
+    if price_info.deals_image_path and os.path.exists(price_info.deals_image_path):
+        slide.shapes.add_picture(
+            price_info.deals_image_path,
             Inches(0.713), Inches(2.102),
-            Inches(3.2), Inches(min(3.0, rows * 0.35))
+            Inches(3.2), Inches(3.2),
         )
-        table = table_shape.table
+    else:
+        transactions = _filter_recent_transactions(price_info)
+        if transactions:
+            cols = 4
+            rows = len(transactions) + 1
+            table_shape = slide.shapes.add_table(
+                rows, cols,
+                Inches(0.713), Inches(2.102),
+                Inches(3.2), Inches(min(3.0, rows * 0.35))
+            )
+            table = table_shape.table
 
-        col_widths = [Inches(0.9), Inches(0.7), Inches(0.5), Inches(1.1)]
-        for i, w in enumerate(col_widths):
-            table.columns[i].width = w
+            col_widths = [Inches(0.9), Inches(0.7), Inches(0.5), Inches(1.1)]
+            headers = ["거래일", "평형", "층", "거래가"]
+            for i, w in enumerate(col_widths):
+                table.columns[i].width = w
 
-        headers = ["거래일", "평형", "층", "거래가"]
-        for i, h in enumerate(headers):
-            cell = table.cell(0, i)
-            cell.text = h
-            for p in cell.text_frame.paragraphs:
-                p.font.size = Pt(9)
-                p.font.bold = True
-                p.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
-                p.alignment = PP_ALIGN.CENTER
-            cell.fill.solid()
-            cell.fill.fore_color.rgb = RGBColor(0xEF, 0xEF, 0xEF)
-
-        for row_idx, txn in enumerate(transactions, start=1):
-            data = [
-                txn.date.strftime("%Y.%m.%d"),
-                txn.area_pyeong,
-                f"{txn.floor}층",
-                txn.price,
-            ]
-            for col_idx, val in enumerate(data):
-                cell = table.cell(row_idx, col_idx)
-                cell.text = val
+            for i, h in enumerate(headers):
+                cell = table.cell(0, i)
+                cell.text = h
                 for p in cell.text_frame.paragraphs:
                     p.font.size = Pt(9)
+                    p.font.bold = True
                     p.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
                     p.alignment = PP_ALIGN.CENTER
-                if row_idx % 2 == 0:
-                    cell.fill.solid()
-                    cell.fill.fore_color.rgb = RGBColor(0xF5, 0xF5, 0xF5)
+                cell.fill.solid()
+                cell.fill.fore_color.rgb = RGBColor(0xEF, 0xEF, 0xEF)
+
+            for row_idx, txn in enumerate(transactions, start=1):
+                data = [
+                    txn.date.strftime("%Y.%m.%d"),
+                    txn.area_pyeong,
+                    f"{txn.floor}층",
+                    txn.price,
+                ]
+                for col_idx, val in enumerate(data):
+                    cell = table.cell(row_idx, col_idx)
+                    cell.text = val
+                    for p in cell.text_frame.paragraphs:
+                        p.font.size = Pt(9)
+                        p.font.color.rgb = RGBColor(0x33, 0x33, 0x33)
+                        p.alignment = PP_ALIGN.CENTER
+                    if row_idx % 2 == 0:
+                        cell.fill.solid()
+                        cell.fill.fore_color.rgb = RGBColor(0xF5, 0xF5, 0xF5)
 
     # ── 우측: 매매거래 그래프 (4.139", 2.102") ──
     if price_info.price_graph_image_path and os.path.exists(price_info.price_graph_image_path):

@@ -562,11 +562,18 @@ def fetch_property_detail(
         # 면적
         area_m2 = None
         area_pyeong = None
-        spc2 = article_data.get("spc2")
+        supply_area_m2 = None
+        spc1 = article_data.get("spc1")  # 공급면적
+        spc2 = article_data.get("spc2")  # 전용면적
         if spc2:
             try:
                 area_m2 = float(spc2)
                 area_pyeong = f"{round(area_m2 / 3.305785)}평"
+            except (ValueError, TypeError):
+                pass
+        if spc1:
+            try:
+                supply_area_m2 = float(spc1)
             except (ValueError, TypeError):
                 pass
 
@@ -644,10 +651,320 @@ def fetch_property_detail(
             bathrooms=bathrooms,
             area_pyeong=area_pyeong,
             area_m2=area_m2,
+            supply_area_m2=supply_area_m2,
         )
 
     print(f"  [WARN] 매물 상세 수집 실패 → 사용자 입력값 사용")
     return base_detail
+
+
+# ─── 평면도 & 배치도 이미지 캡처 ───
+
+def _extract_pyeong_list(html: str) -> List[Dict]:
+    """
+    SSR HTML에서 평형별 정보 추출 (floorPlanUrls 포함).
+
+    Returns:
+        [{"number": 1, "name": "100", "floorPlanUrls": {...},
+          "exclusiveArea": 82.96, ...}, ...]
+    """
+    rsc_pattern = r'self\.__next_f\.push\(\[\d+,"((?:[^"\\]|\\.)*)"\]\)'
+    for match in re.finditer(rsc_pattern, html, re.DOTALL):
+        raw_chunk = match.group(1)
+        if "floorPlanUrls" not in raw_chunk:
+            continue
+
+        try:
+            chunk_clean = json.loads(f'"{raw_chunk}"')
+        except (json.JSONDecodeError, ValueError):
+            chunk_clean = raw_chunk.replace('\\"', '"').replace('\\\\', '\\')
+
+        # result 배열에서 floorPlanUrls 포함된 것 추출
+        for rm in re.finditer(r'"result":\[', chunk_clean):
+            arr = _extract_json_array_at(chunk_clean, rm.end() - 1)
+            if arr and len(arr) > 0 and "floorPlanUrls" in arr[0]:
+                return arr
+
+    return []
+
+
+def _match_pyeong_type(pyeong_list: List[Dict], area_pyeong: str) -> Optional[Dict]:
+    """area_pyeong ("25평")과 매칭되는 평형 타입 찾기"""
+    if not area_pyeong:
+        return None
+
+    # "25평" → 25
+    m = re.search(r"(\d+)", area_pyeong)
+    if not m:
+        return None
+    target_pyeong = int(m.group(1))
+
+    for pt in pyeong_list:
+        exclusive = pt.get("exclusiveArea", 0)
+        if exclusive > 0:
+            calc_pyeong = round(exclusive / 3.305785)
+            if calc_pyeong == target_pyeong:
+                return pt
+
+    return None
+
+
+def _download_floor_plan_from_ssr(
+    complex_id: str,
+    area_pyeong: str,
+    temp_dir: str,
+) -> Optional[str]:
+    """
+    SSR HTML에서 평면도 이미지 URL 추출 → 다운로드.
+
+    Args:
+        complex_id: 단지 ID
+        area_pyeong: "25평" 등 매칭할 평형
+        temp_dir: 이미지 저장 폴더
+
+    Returns:
+        저장된 이미지 파일 경로 또는 None
+    """
+    save_path = os.path.join(temp_dir, complex_id, "floor_plan.jpg")
+
+    # 캐시 확인
+    if os.path.exists(save_path):
+        print(f"  [CACHE] 평면도 캐시 사용")
+        return save_path
+
+    html = _fetch_ssr_html(complex_id)
+    if not html:
+        return None
+
+    pyeong_list = _extract_pyeong_list(html)
+    if not pyeong_list:
+        print(f"  [WARN] 평형 정보에서 평면도 URL을 찾지 못함")
+        return None
+
+    # area_pyeong으로 매칭, 실패 시 첫 번째 평형
+    target = _match_pyeong_type(pyeong_list, area_pyeong)
+    if not target:
+        target = pyeong_list[0]
+
+    target_name = target.get("name", "?")
+    exclusive = target.get("exclusiveArea", 0)
+    print(f"  평면도 대상 평형: {target_name} (전용 {exclusive}㎡)")
+
+    # floorPlanUrls에서 첫 번째 이미지 URL 추출
+    floor_urls = target.get("floorPlanUrls", {})
+    base = floor_urls.get("BASE", {})
+    for key in sorted(base.keys()):
+        image_urls = base[key]
+        if image_urls:
+            url = image_urls[0]
+            if _download_image(url, save_path):
+                print(f"  [OK] 평면도 다운로드 완료")
+                return save_path
+            break
+
+    print(f"  [WARN] 평면도 다운로드 실패")
+    return None
+
+
+async def _capture_site_plan_async(
+    complex_id: str,
+    latitude: float,
+    longitude: float,
+    temp_dir: str,
+    timeout: int = 30000,
+) -> Optional[str]:
+    """
+    네이버지도 위성+건물지도에서 단지 위치 스크린샷 캡처.
+
+    단지 좌표 중심으로 zoom 18 레벨의 지도를 캡처하여
+    건물 배치/동 번호가 보이는 이미지를 생성.
+
+    Returns:
+        저장된 이미지 파일 경로 또는 None
+    """
+    from playwright.async_api import async_playwright
+
+    save_path = os.path.join(temp_dir, complex_id, "site_plan.png")
+    if os.path.exists(save_path):
+        print(f"  [CACHE] 단지위치 캐시 사용")
+        return save_path
+
+    if not latitude or not longitude:
+        print(f"  [SKIP] 좌표 없음 → 단지위치 캡처 생략")
+        return None
+
+    url = f"https://map.naver.com/p?c={longitude},{latitude},18,0,0,0,dh"
+
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(
+                headless=True,
+                args=["--disable-blink-features=AutomationControlled"],
+            )
+            context = await browser.new_context(
+                viewport={"width": 1000, "height": 900},
+                device_scale_factor=2,
+                locale="ko-KR",
+                user_agent=DESKTOP_UA,
+            )
+            page = await context.new_page()
+            await page.add_init_script(
+                'Object.defineProperty(navigator, "webdriver", {get: () => undefined});'
+            )
+
+            await page.goto(url, wait_until="networkidle", timeout=timeout)
+            await page.wait_for_timeout(5000)
+
+            # 좌측 패널 숨기기
+            await page.evaluate("""() => {
+                const panel = document.querySelector('.svc_panel');
+                if (panel) panel.style.display = 'none';
+                document.querySelectorAll('[class*="StyledPanelLayout"]')
+                    .forEach(el => el.style.display = 'none');
+            }""")
+            await page.wait_for_timeout(500)
+
+            # 중앙 영역만 클리핑 (UI 컨트롤 제외)
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            clip = {"x": 100, "y": 100, "width": 600, "height": 600}
+            await page.screenshot(path=save_path, clip=clip)
+
+            await context.close()
+            await browser.close()
+
+        print(f"  [OK] 단지위치 지도 캡처 완료")
+        return save_path
+
+    except Exception as e:
+        print(f"  [WARN] 단지위치 캡처 실패: {e}")
+        return None
+
+
+def capture_complex_images(
+    complex_id: str,
+    area_pyeong: str,
+    temp_dir: str,
+    latitude: float = 0.0,
+    longitude: float = 0.0,
+) -> dict:
+    """
+    단지 평면도 + 단지위치 이미지 캡처 (메인 진입점).
+
+    1. 평면도: SSR HTML에서 URL 추출 → 직접 다운로드
+    2. 단지위치: 네이버지도에서 건물배치 지도 스크린샷
+
+    Args:
+        complex_id: 단지 ID
+        area_pyeong: "25평" 등 매칭할 평형
+        temp_dir: 이미지 저장 폴더
+        latitude: 단지 위도
+        longitude: 단지 경도
+
+    Returns:
+        {"floor_plan_path": str|None, "site_plan_path": str|None}
+    """
+    from src.crawlers.browser_utils import is_playwright_available, run_async
+
+    result = {"floor_plan_path": None, "site_plan_path": None}
+    print(f"  평면도/단지위치 이미지 캡처 중...")
+
+    # 1. 평면도 — SSR HTML에서 다운로드
+    result["floor_plan_path"] = _download_floor_plan_from_ssr(
+        complex_id, area_pyeong, temp_dir
+    )
+
+    # 2. 단지위치 — 네이버지도 스크린샷
+    if is_playwright_available() and latitude and longitude:
+        site_plan = run_async(
+            _capture_site_plan_async(complex_id, latitude, longitude, temp_dir)
+        )
+        result["site_plan_path"] = site_plan
+    elif not latitude or not longitude:
+        print(f"  [SKIP] 좌표 없음 → 단지위치 캡처 생략")
+    else:
+        print(f"  [SKIP] Playwright 미설치 → 단지위치 캡처 생략")
+
+    return result
+
+
+# ─── 단지정보 상세 스크린샷 ───
+
+async def _capture_complex_detail_async(
+    complex_id: str,
+    temp_dir: str,
+    timeout: int = 30000,
+) -> Optional[str]:
+    """
+    fin.land.naver.com 단지정보 페이지에서 기본 정보(세대수, 사용승인일 등)
+    상세 리스트를 스크린샷 캡처.
+
+    Returns:
+        저장된 이미지 파일 경로 또는 None
+    """
+    from playwright.async_api import async_playwright
+
+    save_path = os.path.join(temp_dir, complex_id, "complex_detail.png")
+    if os.path.exists(save_path):
+        print(f"  [CACHE] 단지정보 스크린샷 캐시 사용")
+        return save_path
+
+    url = f"https://fin.land.naver.com/complexes/{complex_id}?tab=complex-info"
+
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(
+                headless=True,
+                args=["--disable-blink-features=AutomationControlled"],
+            )
+            context = await browser.new_context(
+                viewport={"width": 1400, "height": 900},
+                device_scale_factor=2,
+                locale="ko-KR",
+                user_agent=DESKTOP_UA,
+            )
+            page = await context.new_page()
+            await page.add_init_script(
+                'Object.defineProperty(navigator, "webdriver", {get: () => undefined});'
+            )
+
+            await page.goto(url, wait_until="domcontentloaded", timeout=timeout)
+            await page.wait_for_timeout(5000)
+
+            # 기본 정보 리스트 (위치, 사용승인일, 세대수, 난방, 주차, ...)
+            detail_list = page.locator(
+                '[class*="ComplexBaseInfoSummary"] ul'
+            ).first
+            if await detail_list.count() > 0:
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                await detail_list.screenshot(path=save_path)
+                await context.close()
+                await browser.close()
+                print(f"  [OK] 단지정보 스크린샷 캡처 완료")
+                return save_path
+
+            await context.close()
+            await browser.close()
+
+        print(f"  [WARN] 단지정보 상세 리스트를 찾지 못함")
+        return None
+
+    except Exception as e:
+        print(f"  [WARN] 단지정보 스크린샷 캡처 실패: {e}")
+        return None
+
+
+def capture_complex_detail_screenshot(
+    complex_id: str,
+    temp_dir: str,
+) -> Optional[str]:
+    """단지정보 상세 스크린샷 캡처 (동기 래퍼)"""
+    from src.crawlers.browser_utils import is_playwright_available, run_async
+
+    if not is_playwright_available():
+        print(f"  [SKIP] Playwright 미설치 → 단지정보 스크린샷 생략")
+        return None
+
+    return run_async(_capture_complex_detail_async(complex_id, temp_dir))
 
 
 def fetch_all_for_complex(

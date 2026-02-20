@@ -110,6 +110,7 @@ class PriceInfo(BaseModel):
     all_time_high: str = ""            # "7억 2000만원"
     all_time_high_date: str = ""       # "21년 10월"
     price_graph_image_path: Optional[str] = None  # 15년 추이 그래프 이미지
+    deals_image_path: Optional[str] = None        # 아실 거래내역 스크린샷
 
 
 class PropertyDetail(BaseModel):
@@ -127,7 +128,8 @@ class PropertyDetail(BaseModel):
     rooms: Optional[int] = None
     bathrooms: Optional[int] = None
     area_pyeong: Optional[str] = None  # "21평"
-    area_m2: Optional[float] = None    # 49.0
+    area_m2: Optional[float] = None    # 전용면적 49.0㎡
+    supply_area_m2: Optional[float] = None  # 공급면적 59.0㎡
 
 
 class ComplexData(BaseModel):
